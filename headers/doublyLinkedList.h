@@ -8,6 +8,7 @@
 #include <stddef.h>
 
 #include "../logPrinter/logPrinter.h"
+#include "DLL_dump.h"
 
 
 #define _DLL_DEBUG
