@@ -6,9 +6,10 @@
 
 
 #include <stddef.h>
+#include <stdint.h>
+#include <inttypes.h>
 
-#include "../logPrinter/logPrinter.h"
-#include "DLL_dump.h"
+#include "logPrinter.h"
 
 
 #define _DLL_DEBUG
@@ -32,25 +33,22 @@ struct DLL_InitInfo
 #endif // _DLL_DEBUG
 
 
+typedef uint64_t nodeValue_t; 
+#define PRInodeVal PRIu64
+
 struct DLL_Node
 {
+    nodeValue_t value;
     size_t nextNodeNum;
     size_t prevNodeNum;
-};
-
-
-struct DLL_ValueBuffer 
-{
-    void*  buffer;
-    size_t valueSize;
-    size_t capacity;
 };
 
 
 struct DoublyLinkedList
 {
     DLL_Node* nodeArray;
-    DLL_ValueBuffer valueBuffer;
+    size_t capacity;
+    size_t free;
 
     #ifdef _DLL_DEBUG
     DLL_InitInfo initInfo;
@@ -63,11 +61,11 @@ const size_t MIN_DLL_CAPACITY = 10;
 //--------------------------------------------------------------------------------------------------
 
 
-bool DLL_Init(DoublyLinkedList* doublyLinkedList, const size_t valueSize
+bool DLL_Init(DoublyLinkedList* doublyLinkedList
               _DLL_ON_DEBUG(,const char* name, Place place));
 
 #define DLL_INIT(doublyLinkedList, valueSize) \
-    DLL_Init(doublyLinkedList, valueSize _DLL_ON_DEBUG(,GET_NAME(doublyLinkedList), GET_PLACE()))
+    DLL_Init(doublyLinkedList _DLL_ON_DEBUG(,GET_NAME(doublyLinkedList), GET_PLACE()))
 
 
 void DLL_Delete(DoublyLinkedList* doublyLinekedList);

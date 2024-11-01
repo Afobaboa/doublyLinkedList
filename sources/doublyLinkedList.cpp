@@ -1,12 +1,18 @@
 #include <stdlib.h>
 
-#include "../headers/doublyLinkedList.h"
+#include "doublyLinkedList.h"
 
 
 //--------------------------------------------------------------------------------------------------
 
 
-bool DLL_Init(DoublyLinkedList* doublyLinkedList, const size_t valueSize
+void NodeArrayInit(DoublyLinkedList* doublyLinkedList, const size_t startNodeNum);
+
+
+//--------------------------------------------------------------------------------------------------
+
+
+bool DLL_Init(DoublyLinkedList* doublyLinkedList
               _DLL_ON_DEBUG(,const char* name, Place place))
 {
     #ifdef _DLL_DEBUG
@@ -17,19 +23,13 @@ bool DLL_Init(DoublyLinkedList* doublyLinkedList, const size_t valueSize
                                   .place = place};
     #endif // _DLL_DEBUG
 
-    if (valueSize == 0)
-        return false;
-
-    doublyLinkedList->nodeArray = (DLL_Node*) calloc(MIN_DLL_CAPACITY, sizeof(DLL_Node));
+    doublyLinkedList->capacity  = MIN_DLL_CAPACITY;
+    doublyLinkedList->free      = 1;
+    doublyLinkedList->nodeArray = (DLL_Node*) calloc(MIN_DLL_CAPACITY + 1, sizeof(DLL_Node));
     if (doublyLinkedList->nodeArray == NULL)
         return false;
 
-    doublyLinkedList->valueBuffer.buffer = calloc(MIN_DLL_CAPACITY,valueSize);
-    if (doublyLinkedList->valueBuffer.buffer == NULL)
-        return false;
-
-    doublyLinkedList->valueBuffer.capacity  = MIN_DLL_CAPACITY;
-    doublyLinkedList->valueBuffer.valueSize = valueSize;
+    NodeArrayInit(doublyLinkedList, 1);
 
     return true;
 }
@@ -38,6 +38,26 @@ bool DLL_Init(DoublyLinkedList* doublyLinkedList, const size_t valueSize
 void DLL_Delete(DoublyLinkedList* doublyLinekedList)
 {
     free(doublyLinekedList->nodeArray);
-    free(doublyLinekedList->valueBuffer.buffer);
     *doublyLinekedList = {};
+}
+
+
+//--------------------------------------------------------------------------------------------------
+
+
+void NodeArrayInit(DoublyLinkedList* doublyLinkedList, const size_t startNodeNum)
+{
+    DLL_Node* node = NULL;
+    for (size_t nodeNum = startNodeNum; nodeNum < doublyLinkedList->capacity; nodeNum++)
+    {
+        node = doublyLinkedList->nodeArray + nodeNum;
+        node->value       = 0;
+        node->nextNodeNum = nodeNum + 1;
+        node->prevNodeNum = nodeNum - 1;
+    }
+
+    node = doublyLinkedList->nodeArray + doublyLinkedList->capacity;
+    node->value       = 0;
+    node->nextNodeNum = 0;
+    node->prevNodeNum = doublyLinkedList->capacity;
 }
