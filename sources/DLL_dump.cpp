@@ -62,10 +62,15 @@ void PrintEnding(FILE* dotDumpFile)
 
 void DeclareNodes(FILE* dotDumpFile, DoublyLinkedList* doublyLinkedList)
 {
-    DLL_Node node = {};
-    for (size_t nodeNum = 0; nodeNum <= doublyLinkedList->capacity; nodeNum++)
+    DLL_NodeArray* nodeArray = &doublyLinkedList->nodeArray;
+    #ifdef _DLL_DEBUG
+    DLL_InitInfo* initInfo = &doublyLinkedList->initInfo;
+    #endif
+
+    static DLL_Node node = {};
+    for (size_t nodeNum = 0; nodeNum <= nodeArray->capacity; nodeNum++)
     {
-        node = doublyLinkedList->nodeArray[nodeNum];
+        node = nodeArray->buffer[nodeNum];
         fprintf(dotDumpFile, "\tnode%zu [shape=record,label=\""
                              "{ num     | %zu            } | "
                              "{ value   | %" PRInodeVal "} | "
@@ -73,17 +78,49 @@ void DeclareNodes(FILE* dotDumpFile, DoublyLinkedList* doublyLinkedList)
                              "{ prevNum | %zu            }\"];\n",
                              nodeNum, nodeNum, node.value, node.nextNodeNum, node.prevNodeNum);
     }
+    fprintf(dotDumpFile, "\n");
+
+    for (size_t nodeNum = 0; nodeNum < nodeArray->capacity; nodeNum++)
+    {
+        fprintf(dotDumpFile, "\tnode%zu -> node%zu[weight = 1000, color = white]\n",
+                nodeNum, nodeNum + 1);
+    }
+    fprintf(dotDumpFile, "\n");
+
+    fprintf(dotDumpFile, "\tDLL [shape = record, label = \""
+                         "{ nodeCount | %zu   } | "
+                         "{ capacity  | %zu   } | "
+                         "{ free      | %zu   }"
+                         #ifdef _DLL_DEBUG
+                         "| { name     | %s    } | "
+                         "  { place    | %s:%d }"
+                         #endif // _DLL_DEBUG
+                         "\"];\n\n",
+                         nodeArray->nodeCount,
+                         nodeArray->capacity,
+                         nodeArray->free
+
+                         #ifdef _DLL_DEBUG
+                         , initInfo->name
+                         , initInfo->place.file
+                         , initInfo->place.line
+                         #endif // _DLL_DEBUG
+                         );
 }
 
 
 void ConnectNodes(FILE* dotDumpFile, DoublyLinkedList* doublyLinkedList)
 {
-    DLL_Node node = {};
-    for (size_t nodeNum = 0; nodeNum <= doublyLinkedList->capacity; nodeNum++)
+    DLL_NodeArray* nodeArray = &doublyLinkedList->nodeArray;
+    fprintf(dotDumpFile, "DLL -> node%zu;\n\n", nodeArray->free);
+
+    static DLL_Node node = {};
+    for (size_t nodeNum = 0; nodeNum <= nodeArray->capacity; nodeNum++)
     {
-        node = doublyLinkedList->nodeArray[nodeNum];
+        node = nodeArray->buffer[nodeNum];
         fprintf(dotDumpFile, "\tnode%zu -> node%zu;\n", nodeNum, node.nextNodeNum);
     }
+    fprintf(dotDumpFile, "\n");
 }
 
 

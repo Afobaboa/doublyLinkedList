@@ -17,7 +17,7 @@
 #ifdef _DLL_DEBUG
     #define _DLL_ON_DEBUG(...) __VA_ARGS__
 #else 
-    #define _DLL_ON_DEGUG(...) 
+    #define _DLL_ON_DEBUG(...) 
 #endif // _DLL_DEBUG
 
 
@@ -44,18 +44,25 @@ struct DLL_Node
 };
 
 
-struct DoublyLinkedList
+struct DLL_NodeArray 
 {
-    DLL_Node* nodeArray;
+    DLL_Node* buffer;
+    size_t nodeCount;
     size_t capacity;
     size_t free;
+};
+
+
+struct DoublyLinkedList
+{
+    DLL_NodeArray nodeArray;
 
     #ifdef _DLL_DEBUG
     DLL_InitInfo initInfo;
     #endif // _DLL_DEBUG
 };
 
-const size_t MIN_DLL_CAPACITY = 10;
+const size_t DLL_CAPACITY = 10;
 
 
 //--------------------------------------------------------------------------------------------------
