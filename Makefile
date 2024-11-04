@@ -147,7 +147,7 @@ debug_run: debug run
 # Make super dump version
 super_dump_flags:
 	@$(eval FLAGS = $(DEBUG_FLAGS))
-	@$(eval FLAGS += -D_DLL_DEBUG -D_SUPER_DUMP)
+	@$(eval FLAGS += -D_DLL_DEBUG -D_DLL_SUPER_DUMP)
 
 super_dump: super_dump_flags objects_dir $(OBJECTS) $(HEADERS)
 	@$(CC) $(FLAGS) $(OBJECTS) -o $(EXECUTABLE)

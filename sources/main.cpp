@@ -10,7 +10,7 @@ int main()
     DoublyLinkedList DLL = {};
     DLL_INIT(&DLL, 8);
 
-    // #ifdef _DLL_DEBUG
+    // #ifdef _DLL_SUPER_DUMP
     // printf("debug is switched on\n");
     // #else
     // printf("debug is switched off\n");

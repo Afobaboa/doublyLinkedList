@@ -78,6 +78,17 @@ bool DLL_Init(DoublyLinkedList* doublyLinkedList
 void DLL_Delete(DoublyLinkedList* doublyLinekedList);
 
 
+size_t DLL_ValueSearch(DoublyLinkedList* doublyLinkedList, nodeValue_t value);
+
+bool DLL_Insert(DoublyLinkedList* doublyLinkedList, nodeValue_t value, size_t nodeNum);
+bool DLL_PushBack(DoublyLinkedList* doublyLinkedList, nodeValue_t value);
+bool DLL_PushFront(DoublyLinkedList* doublyLinkedList, nodeValue_t value);
+
+bool DLL_Erase(DoublyLinkedList* doublyLinkedList, size_t nodeNum);
+bool DLL_PopBack(DoublyLinkedList* doublyLinkedList);
+bool DLL_PopFront(DoublyLinkedList* doublyLinkedList);
+
+
 //--------------------------------------------------------------------------------------------------
 
 
