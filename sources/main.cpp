@@ -16,11 +16,16 @@ int main()
     // printf("debug is switched off\n");
     // #endif
 
-    DLL_DUMP(&DLL);
-    DLL_DUMP(&DLL);
-    DLL_DUMP(&DLL);
-    DLL_DUMP(&DLL);
-    DLL_DUMP(&DLL);
+    DLL_Dumper dumper = {};
+    DUMPER_INIT(&dumper);
+
+    DLL_DUMP(&dumper, &DLL);
+    DLL_DUMP(&dumper, &DLL);
+    DLL_DUMP(&dumper, &DLL);
+    DLL_DUMP(&dumper, &DLL);
+    DLL_DUMP(&dumper, &DLL);
+
+    DUMPER_DELETE(&dumper);
     
     DLL_Delete(&DLL);
 

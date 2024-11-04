@@ -8,88 +8,106 @@
 //--------------------------------------------------------------------------------------------------
 
 
-void PrintDigraphEnvironment(FILE* dotDumpFile);
+void PrintDigraphEnvironment(DLL_Dumper* dumper);
 
-void PrintHeader(FILE* dotDumpFile, const size_t dumpCounter);
-void PrintNodes(FILE* dotDumpFile, DoublyLinkedList* doublyLinkedList, Place* dumpPlace);
-void PrintEnding(FILE* dotDumpFile);
+void PrintHeader(DLL_Dumper* dumper);
+void PrintNodes(DLL_Dumper* dumper, DoublyLinkedList* doublyLinkedList, Place* dumpPlace);
+void PrintEnding(DLL_Dumper* dumper);
 
-void DeclareNodes(FILE* dotDumpFile, DoublyLinkedList* doublyLinkedList, Place* dumpPlace);
-void ConnectNodes(FILE* dotDumpFile, DoublyLinkedList* doublyLinkedList);
+void DeclareNodes(DLL_Dumper* dumper, DoublyLinkedList* doublyLinkedList, Place* dumpPlace);
+void ConnectNodes(DLL_Dumper* dumper, DoublyLinkedList* doublyLinkedList);
 
-void MakeGraph(const char* dotDumpFileName, const char* pngDumpFileName);
+void MakeGraph(DLL_Dumper* dumper);
 
 
 //--------------------------------------------------------------------------------------------------
 
 
-void DLL_Dump(DoublyLinkedList* doublyLinkedList, Place place)
+bool DumperInit(DLL_Dumper* dumper)
 {
-    static const char* dotDumpFileName = "DLL_dump.dot";
-    static const char* pngDumpFileName = "DLL_dump.png";
-    static size_t dumpCounter = 0;
-    printf("counter = %zu\n", dumpCounter);
+    static bool dumperIsInit = false;
+    if (dumperIsInit)
+        return false;
 
-    FILE* dotDumpFile = NULL;
-    if (dumpCounter > 0)
-        dotDumpFile = fopen(dotDumpFileName, "a+");
-    else 
-    {
-        dotDumpFile = fopen(dotDumpFileName, "w");
-        PrintDigraphEnvironment(dotDumpFile);
-    }
+    dumper->dotDumpFileName = "DLL_dump.dot";
+    dumper->pngDumpFileName = "DLL_dump.png";
+    dumper->dumpCounter     = 0;
 
-    PrintHeader(dotDumpFile, dumpCounter);
-    PrintNodes(dotDumpFile, doublyLinkedList, &place);
-    PrintEnding(dotDumpFile);
+    dumper->dotDumpFile = fopen(dumper->dotDumpFileName, "w");
+    if (dumper->dotDumpFile == NULL)
+        return false;
 
-    fclose(dotDumpFile);
-    MakeGraph(dotDumpFileName, pngDumpFileName);
+    PrintDigraphEnvironment(dumper);
+    
+    dumperIsInit = true;
+    return false;
+}
 
-    getchar(); //for pause
-    dumpCounter++;
+
+void DumperDelete(DLL_Dumper* dumper)
+{
+    fclose(dumper->dotDumpFile);
+
+    dumper->dotDumpFile     = NULL;
+    dumper->dotDumpFileName = "";
+    dumper->pngDumpFileName = "";
+    dumper->dumpCounter     = 0;
+}
+
+
+void DLL_Dump(DLL_Dumper* dumper, DoublyLinkedList* doublyLinkedList, Place place)
+{
+    printf("counter = %zu\n", dumper->dumpCounter);
+
+    PrintHeader(dumper);
+    PrintNodes(dumper, doublyLinkedList, &place);
+    PrintEnding(dumper);
+    fflush(dumper->dotDumpFile);
+
+    MakeGraph(dumper);
+
+    getchar(); // for pause
+    dumper->dumpCounter++;
 }
 
 
 //--------------------------------------------------------------------------------------------------
 
 
-void PrintDigraphEnvironment(FILE* dotDumpFile)
+void PrintDigraphEnvironment(DLL_Dumper* dumper)
 {
-    fprintf(dotDumpFile, "digraph dumpGraph\n"
-                         "{ \n");
+    fprintf(dumper->dotDumpFile, "digraph dumpGraph\n"
+                                 "{\n"
+                                 "\trankdir = LR; \n");
 }
 
 
-void PrintHeader(FILE* dotDumpFile, const size_t dumpCounter)
+void PrintHeader(DLL_Dumper* dumper)
 {
-    if (dumpCounter == 0)
-        fseek(dotDumpFile, -2, SEEK_END);
-    else 
-        fseek(dotDumpFile, -2, SEEK_SET);
+    fseek(dumper->dotDumpFile, -2, SEEK_END);
         
-    fprintf(dotDumpFile, "\nsubgraph dump%zu\n"
-                         "{\n"
-                         "\trankdir = LR;\n",
-                         dumpCounter);
+    fprintf(dumper->dotDumpFile, "\nsubgraph dump%zu\n"
+                                 "{\n"
+                                 "\trankdir = LR;\n",
+                                 dumper->dumpCounter);
 }
 
 
-void PrintNodes(FILE* dotDumpFile, DoublyLinkedList* doublyLinkedList, Place* dumpPlace)
+void PrintNodes(DLL_Dumper* dumper, DoublyLinkedList* doublyLinkedList, Place* dumpPlace)
 {
-    DeclareNodes(dotDumpFile, doublyLinkedList, dumpPlace);
-    ConnectNodes(dotDumpFile, doublyLinkedList);
+    DeclareNodes(dumper, doublyLinkedList, dumpPlace);
+    ConnectNodes(dumper, doublyLinkedList);
 }
 
 
-void PrintEnding(FILE* dotDumpFile)
+void PrintEnding(DLL_Dumper* dumper)
 {
-    fprintf(dotDumpFile, "}\n"
-                         "}");
+    fprintf(dumper->dotDumpFile, "}\n"
+                                 "}");
 }
 
 
-void DeclareNodes(FILE* dotDumpFile, DoublyLinkedList* doublyLinkedList, Place* dumpPlace)
+void DeclareNodes(DLL_Dumper* dumper, DoublyLinkedList* doublyLinkedList, Place* dumpPlace)
 {
     DLL_NodeArray* nodeArray = &doublyLinkedList->nodeArray;
     #ifdef _DLL_DEBUG
@@ -100,64 +118,73 @@ void DeclareNodes(FILE* dotDumpFile, DoublyLinkedList* doublyLinkedList, Place* 
     for (size_t nodeNum = 0; nodeNum <= nodeArray->capacity; nodeNum++)
     {
         node = nodeArray->buffer[nodeNum];
-        fprintf(dotDumpFile, "\tnode%zu [shape=record,label=\""
-                             "{ num     | %zu            } | "
-                             "{ value   | %" PRInodeVal "} | "
-                             "{ nextNum | %zu            } | "
-                             "{ prevNum | %zu            }\"];\n",
-                             nodeNum, nodeNum, node.value, node.nextNodeNum, node.prevNodeNum);
+        fprintf(dumper->dotDumpFile, "\tnode%zu_%zu [shape=record,label=\""
+                                     "{ num     | %zu            } | "
+                                     "{ value   | %" PRInodeVal "} | "
+                                     "{ nextNum | %zu            } | "
+                                     "{ prevNum | %zu            }\"];\n",
+                                     dumper->dumpCounter, nodeNum, 
+                                     nodeNum, 
+                                     node.value, 
+                                     node.nextNodeNum, 
+                                     node.prevNodeNum);
     }
-    fprintf(dotDumpFile, "\n");
+    fprintf(dumper->dotDumpFile, "\n");
 
     for (size_t nodeNum = 0; nodeNum < nodeArray->capacity; nodeNum++)
     {
-        fprintf(dotDumpFile, "\tnode%zu -> node%zu[weight = 1000, color = white]\n",
-                nodeNum, nodeNum + 1);
+        fprintf(dumper->dotDumpFile, "\tnode%zu_%zu -> node%zu_%zu[weight = 1000, color = white]\n",
+                dumper->dumpCounter, nodeNum, dumper->dumpCounter, nodeNum + 1);
     }
-    fprintf(dotDumpFile, "\n");
+    fprintf(dumper->dotDumpFile, "\n");
 
-    fprintf(dotDumpFile, "\tDLL [shape = record, label = \""
-                         "{ dumpPlace   | %s:%d } | "
-                         "{ nodeCount   | %zu   } | "
-                         "{ capacity    | %zu   } | "
-                         "{ free        | %zu   }"
-                         #ifdef _DLL_DEBUG
-                         "| { listname  | %s    } | "
-                         "  { initplace | %s:%d }"
-                         #endif // _DLL_DEBUG
-                         "\"];\n\n",
-                         dumpPlace->function, dumpPlace->line,
-                         nodeArray->nodeCount,
-                         nodeArray->capacity,
-                         nodeArray->free
-
-                         #ifdef _DLL_DEBUG
-                         , initInfo->name
-                         , initInfo->place.file
-                         , initInfo->place.line
-                         #endif // _DLL_DEBUG
-                         );
+    fprintf(dumper->dotDumpFile, "\tDLL%zu [shape = record, label = \""
+                                 "{ dumpNum     | %zu   } | "
+                                 "{ dumpPlace   | %s:%d } | "
+                                 "{ nodeCount   | %zu   } | "
+                                 "{ capacity    | %zu   } | "
+                                 "{ free        | %zu   }"
+                                 #ifdef _DLL_DEBUG
+                                 " | { listName  | %s    } | "
+                                 "   { initPlace | %s:%d }"
+                                 #endif // _DLL_DEBUG
+                                 "\"];\n\n",
+                                 dumper->dumpCounter,
+                                 dumper->dumpCounter,
+                                 dumpPlace->function, dumpPlace->line,
+                                 nodeArray->nodeCount,
+                                 nodeArray->capacity,
+                                 nodeArray->free
+         
+                                 #ifdef _DLL_DEBUG
+                                 , initInfo->name
+                                 , initInfo->place.file
+                                 , initInfo->place.line
+                                 #endif // _DLL_DEBUG
+                                 );
 }
 
 
-void ConnectNodes(FILE* dotDumpFile, DoublyLinkedList* doublyLinkedList)
+void ConnectNodes(DLL_Dumper* dumper, DoublyLinkedList* doublyLinkedList)
 {
     DLL_NodeArray* nodeArray = &doublyLinkedList->nodeArray;
-    fprintf(dotDumpFile, "\tDLL -> node%zu;\n\n", nodeArray->free);
+    fprintf(dumper->dotDumpFile, "\tDLL%zu -> node%zu_%zu;\n\n", 
+            dumper->dumpCounter, dumper->dumpCounter, nodeArray->free);
 
     static DLL_Node node = {};
     for (size_t nodeNum = 0; nodeNum <= nodeArray->capacity; nodeNum++)
     {
         node = nodeArray->buffer[nodeNum];
-        fprintf(dotDumpFile, "\tnode%zu -> node%zu;\n", nodeNum, node.nextNodeNum);
+        fprintf(dumper->dotDumpFile, "\tnode%zu_%zu -> node%zu_%zu;\n", 
+                dumper->dumpCounter, nodeNum, dumper->dumpCounter, node.nextNodeNum);
     }
-    fprintf(dotDumpFile, "\n");
+    fprintf(dumper->dotDumpFile, "\n");
 }
 
 
-void MakeGraph(const char* dotDumpFileName, const char* pngDumpFileName)
+void MakeGraph(DLL_Dumper* dumper)
 {
     static char commandForDot[100] = {};
-    sprintf(commandForDot, "dot -Tpng %s -o %s", dotDumpFileName, pngDumpFileName);
+    sprintf(commandForDot, "dot -Tpng %s -o %s", dumper->dotDumpFileName, dumper->pngDumpFileName);
     system(commandForDot);
 }
