@@ -12,7 +12,7 @@
 #include "logPrinter.h"
 
 
-#define _DLL_DEBUG
+// #define _DLL_DEBUG
 
 #ifdef _DLL_DEBUG
     #define _DLL_ON_DEBUG(...) __VA_ARGS__
