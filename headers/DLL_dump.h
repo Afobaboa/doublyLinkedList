@@ -8,7 +8,10 @@
 #include "doublyLinkedList.h"
 
 
-void DLL_Dump(DoublyLinkedList* doublyLinkedList);
+void DLL_Dump(DoublyLinkedList* doublyLinkedList, Place place);
+
+#define DLL_DUMP(doublyLinkedList) \
+    DLL_Dump(doublyLinkedList, GET_PLACE())
 
 
 //--------------------------------------------------------------------------------------------------

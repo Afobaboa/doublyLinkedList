@@ -19,7 +19,7 @@ bool DLL_Init(DoublyLinkedList* doublyLinkedList
     if (doublyLinkedList == NULL)
         return false;
 
-    doublyLinkedList->initInfo = {.name  = (char*) name, 
+    doublyLinkedList->initInfo = {.name  = (char*) name + 1, 
                                   .place = place};
     #endif // _DLL_DEBUG
 

@@ -8,11 +8,13 @@
 //--------------------------------------------------------------------------------------------------
 
 
-void PrintHeader(FILE* dotDumpFile);
-void PrintNodes(FILE* dotDumpFile, DoublyLinkedList* doublyLinkedList);
+void PrintDigraphEnvironment(FILE* dotDumpFile);
+
+void PrintHeader(FILE* dotDumpFile, const size_t dumpCounter);
+void PrintNodes(FILE* dotDumpFile, DoublyLinkedList* doublyLinkedList, Place* dumpPlace);
 void PrintEnding(FILE* dotDumpFile);
 
-void DeclareNodes(FILE* dotDumpFile, DoublyLinkedList* doublyLinkedList);
+void DeclareNodes(FILE* dotDumpFile, DoublyLinkedList* doublyLinkedList, Place* dumpPlace);
 void ConnectNodes(FILE* dotDumpFile, DoublyLinkedList* doublyLinkedList);
 
 void MakeGraph(const char* dotDumpFileName, const char* pngDumpFileName);
@@ -21,46 +23,73 @@ void MakeGraph(const char* dotDumpFileName, const char* pngDumpFileName);
 //--------------------------------------------------------------------------------------------------
 
 
-void DLL_Dump(DoublyLinkedList* doublyLinkedList)
+void DLL_Dump(DoublyLinkedList* doublyLinkedList, Place place)
 {
     static const char* dotDumpFileName = "DLL_dump.dot";
     static const char* pngDumpFileName = "DLL_dump.png";
-    static FILE* dotDumpFile = fopen(dotDumpFileName, "w");
+    static size_t dumpCounter = 0;
+    printf("counter = %zu\n", dumpCounter);
 
-    PrintHeader(dotDumpFile);
-    PrintNodes(dotDumpFile, doublyLinkedList);
+    FILE* dotDumpFile = NULL;
+    if (dumpCounter > 0)
+        dotDumpFile = fopen(dotDumpFileName, "a+");
+    else 
+    {
+        dotDumpFile = fopen(dotDumpFileName, "w");
+        PrintDigraphEnvironment(dotDumpFile);
+    }
+
+    PrintHeader(dotDumpFile, dumpCounter);
+    PrintNodes(dotDumpFile, doublyLinkedList, &place);
     PrintEnding(dotDumpFile);
 
     fclose(dotDumpFile);
     MakeGraph(dotDumpFileName, pngDumpFileName);
+
+    getchar(); //for pause
+    dumpCounter++;
 }
 
 
 //--------------------------------------------------------------------------------------------------
 
 
-void PrintHeader(FILE* dotDumpFile)
+void PrintDigraphEnvironment(FILE* dotDumpFile)
 {
-    fprintf(dotDumpFile, "digraph G\n"
-                         "{\n"
-                         "\trankdir = LR;\n");
+    fprintf(dotDumpFile, "digraph dumpGraph\n"
+                         "{ \n");
 }
 
 
-void PrintNodes(FILE* dotDumpFile, DoublyLinkedList* doublyLinkedList)
+void PrintHeader(FILE* dotDumpFile, const size_t dumpCounter)
 {
-    DeclareNodes(dotDumpFile, doublyLinkedList);
+    if (dumpCounter == 0)
+        fseek(dotDumpFile, -2, SEEK_END);
+    else 
+        fseek(dotDumpFile, -2, SEEK_SET);
+        
+    fprintf(dotDumpFile, "\nsubgraph dump%zu\n"
+                         "{\n"
+                         "\trankdir = LR;\n",
+                         dumpCounter);
+}
+
+
+void PrintNodes(FILE* dotDumpFile, DoublyLinkedList* doublyLinkedList, Place* dumpPlace)
+{
+    DeclareNodes(dotDumpFile, doublyLinkedList, dumpPlace);
     ConnectNodes(dotDumpFile, doublyLinkedList);
 }
 
 
 void PrintEnding(FILE* dotDumpFile)
 {
-    fprintf(dotDumpFile, "}\n");
+    fprintf(dotDumpFile, "}\n"
+                         "}");
 }
 
 
-void DeclareNodes(FILE* dotDumpFile, DoublyLinkedList* doublyLinkedList)
+void DeclareNodes(FILE* dotDumpFile, DoublyLinkedList* doublyLinkedList, Place* dumpPlace)
 {
     DLL_NodeArray* nodeArray = &doublyLinkedList->nodeArray;
     #ifdef _DLL_DEBUG
@@ -88,14 +117,16 @@ void DeclareNodes(FILE* dotDumpFile, DoublyLinkedList* doublyLinkedList)
     fprintf(dotDumpFile, "\n");
 
     fprintf(dotDumpFile, "\tDLL [shape = record, label = \""
-                         "{ nodeCount | %zu   } | "
-                         "{ capacity  | %zu   } | "
-                         "{ free      | %zu   }"
+                         "{ dumpPlace   | %s:%d } | "
+                         "{ nodeCount   | %zu   } | "
+                         "{ capacity    | %zu   } | "
+                         "{ free        | %zu   }"
                          #ifdef _DLL_DEBUG
-                         "| { name     | %s    } | "
-                         "  { place    | %s:%d }"
+                         "| { listname  | %s    } | "
+                         "  { initplace | %s:%d }"
                          #endif // _DLL_DEBUG
                          "\"];\n\n",
+                         dumpPlace->function, dumpPlace->line,
                          nodeArray->nodeCount,
                          nodeArray->capacity,
                          nodeArray->free
@@ -112,7 +143,7 @@ void DeclareNodes(FILE* dotDumpFile, DoublyLinkedList* doublyLinkedList)
 void ConnectNodes(FILE* dotDumpFile, DoublyLinkedList* doublyLinkedList)
 {
     DLL_NodeArray* nodeArray = &doublyLinkedList->nodeArray;
-    fprintf(dotDumpFile, "DLL -> node%zu;\n\n", nodeArray->free);
+    fprintf(dotDumpFile, "\tDLL -> node%zu;\n\n", nodeArray->free);
 
     static DLL_Node node = {};
     for (size_t nodeNum = 0; nodeNum <= nodeArray->capacity; nodeNum++)
