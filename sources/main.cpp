@@ -19,9 +19,11 @@ int main()
     DUMPER_INIT();
 
     DLL_DUMP(&DLL);
-    DLL_DUMP(&DLL);
-    DLL_DUMP(&DLL);
-    DLL_DUMP(&DLL);
+    DLL_Insert(&DLL, 52, 0);
+    DLL_Insert(&DLL, 228, 0);
+    DLL_Insert(&DLL, 323232, 0);
+    DLL_Insert(&DLL, 239, 3);
+    DLL_Insert(&DLL, 566, 3);
     DLL_DUMP(&DLL);
 
     DUMPER_DELETE();
