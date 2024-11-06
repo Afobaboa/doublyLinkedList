@@ -10,11 +10,14 @@
 void NodeArrayInit(DLL_NodeArray* nodeArray);
 
 
-bool DLL_Verify(const DoublyLinkedList* doublyLinkedList, const size_t nodeNum);
+bool DLL_Verify(const DoublyLinkedList* doublyLinkedList, const size_t nodeLogicIndex);
 
 
 void DLL_AddNode(DoublyLinkedList* doublyLinkedList, 
-                 const size_t nextNum, const size_t prevNum, const nodeValue_t value);
+                 const size_t nextnodeLogicIndex, const size_t prevnodeLogicIndex, const nodeValue_t value);
+
+                
+size_t DLL_GetNodeRealIndex(DoublyLinkedList* doublyLinkedList, const size_t nodeLogicIndex);
 
 
 //--------------------------------------------------------------------------------------------------
@@ -27,13 +30,13 @@ bool DLL_Init(DoublyLinkedList* doublyLinkedList
     if (doublyLinkedList == NULL)
         return false;
 
-    doublyLinkedList->initInfo = {.name  = (char*) name + 1, 
+    doublyLinkedList->initInfo = {.name  = (char*) name, 
                                   .place = place};
     #endif // _DLL_DEBUG
 
     DLL_NodeArray* nodeArray = &doublyLinkedList->nodeArray;
     nodeArray->capacity = DLL_CAPACITY;
-    nodeArray->free     = 1;
+    nodeArray->firstFreenodeLogicIndex     = 1;
     nodeArray->buffer   = (DLL_Node*) calloc(DLL_CAPACITY + 1, sizeof(DLL_Node));
     if (nodeArray->buffer == NULL)
         return false;
@@ -56,64 +59,59 @@ size_t DLL_ValueSearch(const DoublyLinkedList* doublyLinkedList, nodeValue_t val
     if (!DLL_Verify(doublyLinkedList, 0))
         return 0;
     
-    for (size_t nodeIndex = 0, nodeNum = 0; nodeIndex <= doublyLinkedList->nodeArray.nodeCount; 
-                                                                                    nodeIndex++)
+    for (size_t nodeLogicIndex = 0, nodeRealIndex = 0; nodeLogicIndex <= doublyLinkedList->nodeArray.nodeCount; 
+                                                                                    nodeLogicIndex++)
     {
-        DLL_Node* node = &doublyLinkedList->nodeArray.buffer[nodeNum];
-        ColoredPrintf(WHITE, "nodeNum = %zu, value = %" PRInodeVal ", index = %zu\n", 
-                      nodeNum, node->value, nodeIndex);
+        DLL_Node* node = &doublyLinkedList->nodeArray.buffer[nodeRealIndex];
+        ColoredPrintf(WHITE, "nodeRealIndex = %zu, value = %" PRInodeVal ", index = %zu\n", 
+                      nodeRealIndex, node->value, nodeLogicIndex);
         if (node->value == value)
-            return nodeIndex;
+            return nodeLogicIndex;
 
-        nodeNum = node->nextNodeNum;
+        nodeRealIndex = node->nextnodeLogicIndex;
     }
 
     return 0;
 }
 
 
-nodeValue_t DLL_GetNodeValue(const DoublyLinkedList* doublyLinkedList, const size_t nodeNum)
+nodeValue_t DLL_GetNodeValue(const DoublyLinkedList* doublyLinkedList, const size_t nodeLogicIndex)
 {
-    if (!DLL_Verify(doublyLinkedList, nodeNum))
+    if (!DLL_Verify(doublyLinkedList, nodeLogicIndex))
         return 0;
 
-    DLL_Node* node = &doublyLinkedList->nodeArray.buffer[0];
-    for (size_t nodeIndex = 0; nodeIndex < nodeNum; nodeIndex++)
-        node = &doublyLinkedList->nodeArray.buffer[node->nextNodeNum];
+    DLL_Node* nodeBuffer = doublyLinkedList->nodeArray.buffer;
+    DLL_Node* node       = &nodeBuffer[0];
+    for (size_t iterator = 0; iterator < nodeLogicIndex; iterator++)
+        node = &doublyLinkedList->nodeArray.buffer[node->nextnodeLogicIndex];
 
     return node->value;
 }
 
 
-bool DLL_Insert(DoublyLinkedList* doublyLinkedList, nodeValue_t value, const size_t nodeNum)
+bool DLL_Insert(DoublyLinkedList* doublyLinkedList, nodeValue_t value, const size_t nodeLogicIndex)
 {
     doublyLinkedList->nodeArray.nodeCount += 1;
 
-    if (!DLL_Verify(doublyLinkedList, nodeNum))
+    if (!DLL_Verify(doublyLinkedList, nodeLogicIndex))
     {
         doublyLinkedList->nodeArray.nodeCount--;
         return false;
     }
 
-    DLL_Node* node = &doublyLinkedList->nodeArray.buffer[0];
-    size_t nodeIndex = 0;
-    for (size_t nodeIterator = 1; nodeIterator <= nodeNum; nodeIterator++)
-    {
-        nodeIndex = node->nextNodeNum;
-        node = doublyLinkedList->nodeArray.buffer + nodeIndex;
-    }
+    DLL_Node* nodeBuffer = doublyLinkedList->nodeArray.buffer;
 
-    size_t free    = doublyLinkedList->nodeArray.free;
-    size_t prevNum = nodeIndex;
-    size_t nextNum = node->nextNodeNum;
-    if (nextNum == free)
-        nextNum = doublyLinkedList->nodeArray.buffer[free].nextNodeNum;
+    const size_t nodeRealIndex     = DLL_GetNodeRealIndex(doublyLinkedList, nodeLogicIndex);
+    DLL_Node*    currentNode = &nodeBuffer[nodeRealIndex];
 
-    node->nextNodeNum = free;
-    node = &doublyLinkedList->nodeArray.buffer[nextNum];
-    node->prevNodeNum = free;
+    const size_t prevnodeLogicIndex      = nodeLogicIndex;
+    const size_t nextnodeLogicIndex      = currentNode->nextnodeLogicIndex;
+    const size_t firstFreenodeLogicIndex = doublyLinkedList->nodeArray.firstFreenodeLogicIndex;
 
-    DLL_AddNode(doublyLinkedList, nextNum, prevNum, value);
+    currentNode->nextnodeLogicIndex              = firstFreenodeLogicIndex;
+    nodeBuffer[nextnodeLogicIndex].prevnodeLogicIndex = firstFreenodeLogicIndex;
+
+    DLL_AddNode(doublyLinkedList, nextnodeLogicIndex, prevnodeLogicIndex, value);
 
     return true;
 }
@@ -131,32 +129,30 @@ bool DLL_PushFront(DoublyLinkedList* doublyLinkedList, nodeValue_t value)
 }
 
 
-bool DLL_Erase(DoublyLinkedList* doublyLinkedList, const size_t nodeNum)
+bool DLL_Erase(DoublyLinkedList* doublyLinkedList, const size_t nodeLogicIndex)
 {   
-    if (nodeNum == 0)
+    if (nodeLogicIndex == 0)
         return false;
 
-    if (!DLL_Verify(doublyLinkedList, nodeNum))
+    if (!DLL_Verify(doublyLinkedList, nodeLogicIndex))
         return false;
 
-    DLL_Node* node      = &doublyLinkedList->nodeArray.buffer[0];
-    size_t    nodeIndex = 0;
-    for (size_t i = 0; i < nodeNum; i++) 
-    {
-        nodeIndex = node->nextNodeNum;
-        node = &doublyLinkedList->nodeArray.buffer[nodeIndex];
-    }
+    const size_t nodeRealIndex = DLL_GetNodeRealIndex(doublyLinkedList, nodeLogicIndex);
+    DLL_Node* nodeBuffer = doublyLinkedList->nodeArray.buffer;
 
-    DLL_Node* prevNode = &doublyLinkedList->nodeArray.buffer[node->prevNodeNum];
-    DLL_Node* nextNode = &doublyLinkedList->nodeArray.buffer[node->nextNodeNum];
+    DLL_Node* currentNode = &nodeBuffer[nodeRealIndex];
+    DLL_Node* prevNode    = &nodeBuffer[currentNode->prevnodeLogicIndex];
+    DLL_Node* nextNode    = &nodeBuffer[currentNode->nextnodeLogicIndex];
 
-    prevNode->nextNodeNum = node->nextNodeNum;
-    nextNode->prevNodeNum = node->prevNodeNum;
+    prevNode->nextnodeLogicIndex = currentNode->nextnodeLogicIndex;
+    nextNode->prevnodeLogicIndex = currentNode->prevnodeLogicIndex;
     
-    size_t* freePtr = &doublyLinkedList->nodeArray.free;
-    doublyLinkedList->nodeArray.buffer[*freePtr].prevNodeNum = nodeIndex;
-    node->nextNodeNum = *freePtr;
-    *freePtr = nodeIndex;
+    size_t*   firstFreenodeLogicIndexPtr = &doublyLinkedList->nodeArray.firstFreenodeLogicIndex;
+    DLL_Node* firstFreeNode         = &nodeBuffer[*firstFreenodeLogicIndexPtr];
+
+    firstFreeNode->prevnodeLogicIndex = nodeLogicIndex;
+    currentNode->nextnodeLogicIndex   = *firstFreenodeLogicIndexPtr;
+    *firstFreenodeLogicIndexPtr = nodeLogicIndex;
 
     doublyLinkedList->nodeArray.nodeCount--;
     return true;
@@ -183,35 +179,35 @@ void NodeArrayInit(DLL_NodeArray* nodeArray)
     DLL_Node* node = NULL;
     node = &nodeArray->buffer[0];
     node->value       = 0;
-    node->nextNodeNum = 1;
-    node->prevNodeNum = nodeArray->capacity + 1;
+    node->nextnodeLogicIndex = 1;
+    node->prevnodeLogicIndex = nodeArray->capacity + 1;
 
-    for (size_t nodeNum = 1; nodeNum < nodeArray->capacity; nodeNum++)
+    for (size_t nodeRealIndex = 1; nodeRealIndex < nodeArray->capacity; nodeRealIndex++)
     {
-        node = nodeArray->buffer + nodeNum;
+        node = nodeArray->buffer + nodeRealIndex;
         node->value       = 0;
-        node->nextNodeNum = nodeNum + 1;
-        node->prevNodeNum = nodeNum - 1;
+        node->nextnodeLogicIndex = nodeRealIndex + 1;
+        node->prevnodeLogicIndex = nodeRealIndex - 1;
     }
 
     node = nodeArray->buffer + nodeArray->capacity;
     node->value       = 0;
-    node->nextNodeNum = 0;
-    node->prevNodeNum = nodeArray->capacity;
+    node->nextnodeLogicIndex = 0;
+    node->prevnodeLogicIndex = nodeArray->capacity;
 }
 
 
 void DLL_AddNode(DoublyLinkedList* doublyLinkedList, 
-                 const size_t nextNum, const size_t prevNum, const nodeValue_t value)
+                 const size_t nextnodeLogicIndex, const size_t prevnodeLogicIndex, const nodeValue_t value)
 {
     // DLL_DUMP(doublyLinkedList);
-    const size_t free = doublyLinkedList->nodeArray.free;
-    doublyLinkedList->nodeArray.free = doublyLinkedList->nodeArray.buffer[free].nextNodeNum;
+    const size_t firstFreenodeLogicIndex = doublyLinkedList->nodeArray.firstFreenodeLogicIndex;
+    doublyLinkedList->nodeArray.firstFreenodeLogicIndex = doublyLinkedList->nodeArray.buffer[firstFreenodeLogicIndex].nextnodeLogicIndex;
 
-    DLL_Node* newNode = &doublyLinkedList->nodeArray.buffer[free];
+    DLL_Node* newNode = &doublyLinkedList->nodeArray.buffer[firstFreenodeLogicIndex];
     *newNode = {.value       = value,
-                .nextNodeNum = nextNum,
-                .prevNodeNum = prevNum};
+                .nextnodeLogicIndex = nextnodeLogicIndex,
+                .prevnodeLogicIndex = prevnodeLogicIndex};
 
     // DLL_DUMP(doublyLinkedList);
 }
@@ -223,7 +219,7 @@ void DLL_AddNode(DoublyLinkedList* doublyLinkedList,
     #define QUIET(...) 
 #endif // _DLL_QUIET_VERIFY
 
-bool DLL_Verify(const DoublyLinkedList* doublyLinkedList, const size_t nodeNum)
+bool DLL_Verify(const DoublyLinkedList* doublyLinkedList, const size_t nodeLogicIndex)
 {
     #ifdef _DLL_SUPER_DUMP
     DLL_DUMP(doublyLinkedList);
@@ -237,9 +233,9 @@ bool DLL_Verify(const DoublyLinkedList* doublyLinkedList, const size_t nodeNum)
     }
     #endif // _DLL_DEBUG
 
-    if (nodeNum > doublyLinkedList->nodeArray.nodeCount)
+    if (nodeLogicIndex > doublyLinkedList->nodeArray.nodeCount)
     {
-        QUIET(ColoredPrintf(RED, "nodeNum = %zu > nodeCount\n", nodeNum));
+        QUIET(ColoredPrintf(RED, "nodeRealIndex = %zu > nodeCount\n", nodeLogicIndex));
         return false;
     }
 
@@ -250,9 +246,9 @@ bool DLL_Verify(const DoublyLinkedList* doublyLinkedList, const size_t nodeNum)
     }
 
     #ifdef _DLL_DEBUG
-    if (doublyLinkedList->nodeArray.free > doublyLinkedList->nodeArray.capacity)
+    if (doublyLinkedList->nodeArray.firstFreenodeLogicIndex > doublyLinkedList->nodeArray.capacity)
     {
-        QUIET(ColoredPrintf(RED, "free > capacity\n"));
+        QUIET(ColoredPrintf(RED, "firstFreenodeLogicIndex > capacity\n"));
         return false;
     }
 
@@ -266,3 +262,18 @@ bool DLL_Verify(const DoublyLinkedList* doublyLinkedList, const size_t nodeNum)
     return true;
 }
 #undef QUIET
+
+
+size_t DLL_GetNodeRealIndex(DoublyLinkedList* doublyLinkedList, const size_t nodeLogicIndex)
+{
+    size_t    nodeRealIndex = 0;
+    DLL_Node* node    = &doublyLinkedList->nodeArray.buffer[0];
+
+    for (size_t iterator = 0; iterator < nodeLogicIndex; iterator++) 
+    {
+        nodeRealIndex = node->nextnodeLogicIndex;
+        node    = &doublyLinkedList->nodeArray.buffer[nodeRealIndex];
+    }
+
+    return nodeRealIndex;
+}

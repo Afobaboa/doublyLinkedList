@@ -39,8 +39,8 @@ typedef int64_t nodeValue_t;
 struct DLL_Node
 {
     nodeValue_t value;
-    size_t nextNodeNum;
-    size_t prevNodeNum;
+    size_t nextnodeLogicIndex;
+    size_t prevnodeLogicIndex;
 };
 
 
@@ -49,7 +49,7 @@ struct DLL_NodeArray
     DLL_Node* buffer;
     size_t nodeCount;
     size_t capacity;
-    size_t free;
+    size_t firstFreenodeLogicIndex;
 };
 
 
@@ -71,7 +71,7 @@ const size_t DLL_CAPACITY = 10;
 bool DLL_Init(DoublyLinkedList* doublyLinkedList
               _DLL_ON_DEBUG(,const char* name, Place place));
 
-#define DLL_INIT(doublyLinkedList, valueSize) \
+#define DLL_INIT(doublyLinkedList) \
     DLL_Init(doublyLinkedList _DLL_ON_DEBUG(,GET_NAME(doublyLinkedList), GET_PLACE()))
 
 
@@ -79,13 +79,13 @@ void DLL_Delete(DoublyLinkedList* doublyLinekedList);
 
 
 size_t DLL_ValueSearch(const DoublyLinkedList* doublyLinkedList, nodeValue_t value);
-nodeValue_t DLL_GetNodeValue(const DoublyLinkedList* doublyLinkedList, const size_t nodeNum);
+nodeValue_t DLL_GetNodeValue(const DoublyLinkedList* doublyLinkedList, const size_t nodeLogicIndex);
 
-bool DLL_Insert(DoublyLinkedList* doublyLinkedList, nodeValue_t value, const size_t nodeNum);
+bool DLL_Insert(DoublyLinkedList* doublyLinkedList, nodeValue_t value, const size_t nodeLogicIndex);
 bool DLL_PushBack(DoublyLinkedList* doublyLinkedList, nodeValue_t value);
 bool DLL_PushFront(DoublyLinkedList* doublyLinkedList, nodeValue_t value);
 
-bool DLL_Erase(DoublyLinkedList* doublyLinkedList, const size_t nodeNum);
+bool DLL_Erase(DoublyLinkedList* doublyLinkedList, const size_t nodeLogicIndex);
 bool DLL_PopBack(DoublyLinkedList* doublyLinkedList);
 bool DLL_PopFront(DoublyLinkedList* doublyLinkedList);
 

@@ -129,26 +129,26 @@ void DeclareNodes(DoublyLinkedList* doublyLinkedList, Place* dumpPlace)
     #endif
 
     static DLL_Node node = {};
-    for (size_t nodeNum = 0; nodeNum <= nodeArray->capacity; nodeNum++)
+    for (size_t nodeRealIndex = 0; nodeRealIndex <= nodeArray->capacity; nodeRealIndex++)
     {
-        node = nodeArray->buffer[nodeNum];
+        node = nodeArray->buffer[nodeRealIndex];
         fprintf(dumper.dotDumpFile, "\tnode%zu_%zu [shape=record,label=\""
                                     "{ num     | %zu            } | "
                                     "{ value   | %" PRInodeVal "} | "
                                     "{ nextNum | %zu            } | "
                                     "{ prevNum | %zu            }\"];\n",
-                                    dumper.dumpCounter, nodeNum, 
-                                    nodeNum, 
+                                    dumper.dumpCounter, nodeRealIndex, 
+                                    nodeRealIndex, 
                                     node.value, 
-                                    node.nextNodeNum, 
-                                    node.prevNodeNum);
+                                    node.nextnodeLogicIndex, 
+                                    node.prevnodeLogicIndex);
     }
     fprintf(dumper.dotDumpFile, "\n");
 
-    for (size_t nodeNum = 0; nodeNum < nodeArray->capacity; nodeNum++)
+    for (size_t nodeRealIndex = 0; nodeRealIndex < nodeArray->capacity; nodeRealIndex++)
     {
         fprintf(dumper.dotDumpFile, "\tnode%zu_%zu -> node%zu_%zu[weight = 1000, color = white]\n",
-                dumper.dumpCounter, nodeNum, dumper.dumpCounter, nodeNum + 1);
+                dumper.dumpCounter, nodeRealIndex, dumper.dumpCounter, nodeRealIndex + 1);
     }
     fprintf(dumper.dotDumpFile, "\n");
 
@@ -157,7 +157,7 @@ void DeclareNodes(DoublyLinkedList* doublyLinkedList, Place* dumpPlace)
                                 "{ dumpPlace   | %s:%d } | "
                                 "{ nodeCount   | %zu   } | "
                                 "{ capacity    | %zu   } | "
-                                "{ free        | %zu   }"
+                                "{ firstFreenodeLogicIndex        | %zu   }"
                                 #ifdef _DLL_DEBUG
                                 " | { listName  | %s    } | "
                                 "   { initPlace | %s:%d }"
@@ -168,7 +168,7 @@ void DeclareNodes(DoublyLinkedList* doublyLinkedList, Place* dumpPlace)
                                 dumpPlace->function, dumpPlace->line,
                                 nodeArray->nodeCount,
                                 nodeArray->capacity,
-                                nodeArray->free
+                                nodeArray->firstFreenodeLogicIndex
         
                                 #ifdef _DLL_DEBUG
                                 , initInfo->name
@@ -183,14 +183,14 @@ void ConnectNodes(DoublyLinkedList* doublyLinkedList)
 {
     DLL_NodeArray* nodeArray = &doublyLinkedList->nodeArray;
     fprintf(dumper.dotDumpFile, "\tDLL%zu -> node%zu_%zu;\n\n", 
-            dumper.dumpCounter, dumper.dumpCounter, nodeArray->free);
+            dumper.dumpCounter, dumper.dumpCounter, nodeArray->firstFreenodeLogicIndex);
 
     static DLL_Node node = {};
-    for (size_t nodeNum = 0; nodeNum <= nodeArray->capacity; nodeNum++)
+    for (size_t nodeRealIndex = 0; nodeRealIndex <= nodeArray->capacity; nodeRealIndex++)
     {
-        node = nodeArray->buffer[nodeNum];
+        node = nodeArray->buffer[nodeRealIndex];
         fprintf(dumper.dotDumpFile, "\tnode%zu_%zu -> node%zu_%zu;\n", 
-                dumper.dumpCounter, nodeNum, dumper.dumpCounter, node.nextNodeNum);
+                dumper.dumpCounter, nodeRealIndex, dumper.dumpCounter, node.nextnodeLogicIndex);
     }
     fprintf(dumper.dotDumpFile, "\n");
 }
@@ -198,7 +198,8 @@ void ConnectNodes(DoublyLinkedList* doublyLinkedList)
 
 void MakeGraph()
 {
-    static char commandForDot[100] = {};
+    const size_t MAX_COMMAND_LENGTH = 100;
+    char commandForDot[MAX_COMMAND_LENGTH] = {};
     sprintf(commandForDot, "dot -Tpng %s -o %s", dumper.dotDumpFileName, dumper.pngDumpFileName);
     system(commandForDot);
 }
