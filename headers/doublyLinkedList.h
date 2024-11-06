@@ -31,7 +31,7 @@ struct DLL_InitInfo
     Place place;
 };
 #endif // _DLL_DEBUG
-// printf("My value = %" PRIu64, value);
+
 
 typedef int64_t nodeValue_t; 
 #define PRInodeVal PRId64
