@@ -72,7 +72,7 @@ size_t DLL_ValueSearch(const DoublyLinkedList* doublyLinkedList, nodeValue_t val
 }
 
 
-nodeValue_t DLL_GetNodeValue(const DoublyLinkedList* doublyLinkedList, size_t nodeNum)
+nodeValue_t DLL_GetNodeValue(const DoublyLinkedList* doublyLinkedList, const size_t nodeNum)
 {
     if (!DLL_Verify(doublyLinkedList, nodeNum))
         return 0;
@@ -85,12 +85,15 @@ nodeValue_t DLL_GetNodeValue(const DoublyLinkedList* doublyLinkedList, size_t no
 }
 
 
-bool DLL_Insert(DoublyLinkedList* doublyLinkedList, nodeValue_t value, size_t nodeNum)
+bool DLL_Insert(DoublyLinkedList* doublyLinkedList, nodeValue_t value, const size_t nodeNum)
 {
     doublyLinkedList->nodeArray.nodeCount += 1;
 
     if (!DLL_Verify(doublyLinkedList, nodeNum))
+    {
+        doublyLinkedList->nodeArray.nodeCount--;
         return false;
+    }
 
     DLL_Node* node = &doublyLinkedList->nodeArray.buffer[0];
     size_t nodeIndex = 0;
@@ -128,21 +131,47 @@ bool DLL_PushFront(DoublyLinkedList* doublyLinkedList, nodeValue_t value)
 }
 
 
-bool DLL_PopBack(DoublyLinkedList* doublyLinkedList)
-{
-    if (!DLL_Verify(doublyLinkedList, 0))
+bool DLL_Erase(DoublyLinkedList* doublyLinkedList, const size_t nodeNum)
+{   
+    if (nodeNum == 0)
         return false;
 
+    if (!DLL_Verify(doublyLinkedList, nodeNum))
+        return false;
+
+    DLL_Node* node      = &doublyLinkedList->nodeArray.buffer[0];
+    size_t    nodeIndex = 0;
+    for (size_t i = 0; i < nodeNum; i++) 
+    {
+        nodeIndex = node->nextNodeNum;
+        node = &doublyLinkedList->nodeArray.buffer[nodeIndex];
+    }
+
+    DLL_Node* prevNode = &doublyLinkedList->nodeArray.buffer[node->prevNodeNum];
+    DLL_Node* nextNode = &doublyLinkedList->nodeArray.buffer[node->nextNodeNum];
+
+    prevNode->nextNodeNum = node->nextNodeNum;
+    nextNode->prevNodeNum = node->prevNodeNum;
+    
+    size_t* freePtr = &doublyLinkedList->nodeArray.free;
+    doublyLinkedList->nodeArray.buffer[*freePtr].prevNodeNum = nodeIndex;
+    node->nextNodeNum = *freePtr;
+    *freePtr = nodeIndex;
+
+    doublyLinkedList->nodeArray.nodeCount--;
     return true;
+}
+
+
+bool DLL_PopBack(DoublyLinkedList* doublyLinkedList)
+{
+    return DLL_Erase(doublyLinkedList, 1);
 }
 
 
 bool DLL_PopFront(DoublyLinkedList* doublyLinkedList)
 {
-    if (!DLL_Verify(doublyLinkedList, 0))
-        return false;
-
-    return true;
+    return DLL_Erase(doublyLinkedList, doublyLinkedList->nodeArray.nodeCount);
 }
 
 
