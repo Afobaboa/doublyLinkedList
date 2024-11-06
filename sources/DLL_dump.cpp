@@ -28,7 +28,10 @@ void PrintHeader();
 void PrintNodes(DoublyLinkedList* doublyLinkedList, Place* dumpPlace);
 void PrintEnding();
 
-void DeclareNodes(DoublyLinkedList* doublyLinkedList, Place* dumpPlace);
+void DeclareAllNodes(DoublyLinkedList* doublyLinkedList, Place* dumpPlace);
+void DeclareNode(DLL_Node* node, const size_t nodeRealIndex);
+void DeclareListHeader(DoublyLinkedList* doublyLinkedList, Place* dumpPlace);
+
 void ConnectNodes(DoublyLinkedList* doublyLinkedList);
 
 void MakeGraph();
@@ -109,7 +112,7 @@ void PrintHeader()
 
 void PrintNodes(DoublyLinkedList* doublyLinkedList, Place* dumpPlace)
 {
-    DeclareNodes(doublyLinkedList, dumpPlace);
+    DeclareAllNodes(doublyLinkedList, dumpPlace);
     ConnectNodes(doublyLinkedList);
 }
 
@@ -121,27 +124,15 @@ void PrintEnding()
 }
 
 
-void DeclareNodes(DoublyLinkedList* doublyLinkedList, Place* dumpPlace)
+void DeclareAllNodes(DoublyLinkedList* doublyLinkedList, Place* dumpPlace)
 {
     DLL_NodeArray* nodeArray = &doublyLinkedList->nodeArray;
-    #ifdef _DLL_DEBUG
-    DLL_InitInfo* initInfo = &doublyLinkedList->initInfo;
-    #endif
 
-    static DLL_Node node = {};
+    DLL_Node* node = NULL;
     for (size_t nodeRealIndex = 0; nodeRealIndex <= nodeArray->capacity; nodeRealIndex++)
     {
-        node = nodeArray->buffer[nodeRealIndex];
-        fprintf(dumper.dotDumpFile, "\tnode%zu_%zu [shape=record,label=\""
-                                    "{ num     | %zu            } | "
-                                    "{ value   | %" PRInodeVal "} | "
-                                    "{ nextNum | %zu            } | "
-                                    "{ prevNum | %zu            }\"];\n",
-                                    dumper.dumpCounter, nodeRealIndex, 
-                                    nodeRealIndex, 
-                                    node.value, 
-                                    node.nextnodeLogicIndex, 
-                                    node.prevnodeLogicIndex);
+        node = &nodeArray->buffer[nodeRealIndex];
+        DeclareNode(node, nodeRealIndex);
     }
     fprintf(dumper.dotDumpFile, "\n");
 
@@ -152,30 +143,7 @@ void DeclareNodes(DoublyLinkedList* doublyLinkedList, Place* dumpPlace)
     }
     fprintf(dumper.dotDumpFile, "\n");
 
-    fprintf(dumper.dotDumpFile, "\tDLL%zu [shape = record, label = \""
-                                "{ dumpNum     | %zu   } | "
-                                "{ dumpPlace   | %s:%d } | "
-                                "{ nodeCount   | %zu   } | "
-                                "{ capacity    | %zu   } | "
-                                "{ firstFreenodeLogicIndex        | %zu   }"
-                                #ifdef _DLL_DEBUG
-                                " | { listName  | %s    } | "
-                                "   { initPlace | %s:%d }"
-                                #endif // _DLL_DEBUG
-                                "\"];\n\n",
-                                dumper.dumpCounter,
-                                dumper.dumpCounter,
-                                dumpPlace->function, dumpPlace->line,
-                                nodeArray->nodeCount,
-                                nodeArray->capacity,
-                                nodeArray->firstFreenodeLogicIndex
-        
-                                #ifdef _DLL_DEBUG
-                                , initInfo->name
-                                , initInfo->place.file
-                                , initInfo->place.line
-                                #endif // _DLL_DEBUG
-                                );
+    DeclareListHeader(doublyLinkedList, dumpPlace);
 }
 
 
@@ -202,4 +170,48 @@ void MakeGraph()
     char commandForDot[MAX_COMMAND_LENGTH] = {};
     sprintf(commandForDot, "dot -Tpng %s -o %s", dumper.dotDumpFileName, dumper.pngDumpFileName);
     system(commandForDot);
+}
+
+
+void DeclareNode(DLL_Node* node, const size_t nodeRealIndex)
+{
+    fprintf(dumper.dotDumpFile, "\tnode%zu_%zu [shape=record,label=\""
+                                    "{ num     | %zu            } | "
+                                    "{ value   | %" PRInodeVal "} | "
+                                    "{ nextNum | %zu            } | "
+                                    "{ prevNum | %zu            }\"];\n",
+                                    dumper.dumpCounter, nodeRealIndex, 
+                                    nodeRealIndex, 
+                                    node->value, 
+                                    node->nextnodeLogicIndex, 
+                                    node->prevnodeLogicIndex);
+}
+
+
+void DeclareListHeader(DoublyLinkedList* doublyLinkedList, Place* dumpPlace)
+{
+    DLL_NodeArray* nodeArray = &doublyLinkedList->nodeArray;
+    fprintf(dumper.dotDumpFile, "\tDLL%zu [shape = record, label = \""
+                                "{ dumpNum     | %zu   } | "
+                                "{ dumpPlace   | %s:%d } | "
+                                "{ nodeCount   | %zu   } | "
+                                "{ capacity    | %zu   } | "
+                                "{ firstFreenodeLogicIndex        | %zu   }",
+                                dumper.dumpCounter,
+                                dumper.dumpCounter,
+                                dumpPlace->function, dumpPlace->line,
+                                nodeArray->nodeCount,
+                                nodeArray->capacity,
+                                nodeArray->firstFreenodeLogicIndex);
+
+    #ifdef _DLL_DEBUG
+    DLL_InitInfo* initInfo = &doublyLinkedList->initInfo;
+    fprintf(dumper.dotDumpFile, " | { listName  | %s    } | "
+                                "   { initPlace | %s:%d }",
+                                initInfo->name,
+                                initInfo->place.file,
+                                initInfo->place.line);
+    #endif // _DLL_DEBUG
+
+    fprintf(dumper.dotDumpFile, "\"];\n\n");
 }
