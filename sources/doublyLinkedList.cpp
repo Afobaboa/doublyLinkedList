@@ -10,7 +10,7 @@
 void NodeArrayInit(DLL_NodeArray* nodeArray);
 
 
-bool DLL_Verify(DoublyLinkedList* doublyLinkedList);
+bool DLL_Verify(const DoublyLinkedList* doublyLinkedList, const size_t nodeNum);
 
 
 void DLL_AddNode(DoublyLinkedList* doublyLinkedList, 
@@ -51,17 +51,19 @@ void DLL_Delete(DoublyLinkedList* doublyLinekedList)
 }
 
 
-size_t DLL_ValueSearch(DoublyLinkedList* doublyLinkedList, nodeValue_t value)
+size_t DLL_ValueSearch(const DoublyLinkedList* doublyLinkedList, nodeValue_t value)
 {
-    if (!DLL_Verify(doublyLinkedList))
+    if (!DLL_Verify(doublyLinkedList, 0))
         return 0;
     
-    size_t nodeNum = doublyLinkedList->nodeArray.buffer[0].nextNodeNum;
-    while (nodeNum != doublyLinkedList->nodeArray.free)
+    for (size_t nodeIndex = 0, nodeNum = 0; nodeIndex <= doublyLinkedList->nodeArray.nodeCount; 
+                                                                                    nodeIndex++)
     {
         DLL_Node* node = &doublyLinkedList->nodeArray.buffer[nodeNum];
+        ColoredPrintf(WHITE, "nodeNum = %zu, value = %" PRInodeVal ", index = %zu\n", 
+                      nodeNum, node->value, nodeIndex);
         if (node->value == value)
-            return nodeNum;
+            return nodeIndex;
 
         nodeNum = node->nextNodeNum;
     }
@@ -70,11 +72,24 @@ size_t DLL_ValueSearch(DoublyLinkedList* doublyLinkedList, nodeValue_t value)
 }
 
 
+nodeValue_t DLL_GetNodeValue(const DoublyLinkedList* doublyLinkedList, size_t nodeNum)
+{
+    if (!DLL_Verify(doublyLinkedList, nodeNum))
+        return 0;
+
+    DLL_Node* node = &doublyLinkedList->nodeArray.buffer[0];
+    for (size_t nodeIndex = 0; nodeIndex < nodeNum; nodeIndex++)
+        node = &doublyLinkedList->nodeArray.buffer[node->nextNodeNum];
+
+    return node->value;
+}
+
+
 bool DLL_Insert(DoublyLinkedList* doublyLinkedList, nodeValue_t value, size_t nodeNum)
 {
     doublyLinkedList->nodeArray.nodeCount += 1;
 
-    if (!DLL_Verify(doublyLinkedList))
+    if (!DLL_Verify(doublyLinkedList, nodeNum))
         return false;
 
     DLL_Node* node = &doublyLinkedList->nodeArray.buffer[0];
@@ -103,34 +118,19 @@ bool DLL_Insert(DoublyLinkedList* doublyLinkedList, nodeValue_t value, size_t no
 
 bool DLL_PushBack(DoublyLinkedList* doublyLinkedList, nodeValue_t value)
 {
-    if (!DLL_Verify(doublyLinkedList))
-        return false;
-
-    return true;
+    return DLL_Insert(doublyLinkedList, value, doublyLinkedList->nodeArray.nodeCount);
 }
 
 
 bool DLL_PushFront(DoublyLinkedList* doublyLinkedList, nodeValue_t value)
 {
-    if (!DLL_Verify(doublyLinkedList))
-        return false;
-
-    return true;
-}
-
-
-bool DLL_Erase(DoublyLinkedList* doublyLinkedList, size_t nodeNum)
-{
-    if (!DLL_Verify(doublyLinkedList))
-        return false;
-
-    return true;
+    return DLL_Insert(doublyLinkedList, value, 0);
 }
 
 
 bool DLL_PopBack(DoublyLinkedList* doublyLinkedList)
 {
-    if (!DLL_Verify(doublyLinkedList))
+    if (!DLL_Verify(doublyLinkedList, 0))
         return false;
 
     return true;
@@ -139,7 +139,7 @@ bool DLL_PopBack(DoublyLinkedList* doublyLinkedList)
 
 bool DLL_PopFront(DoublyLinkedList* doublyLinkedList)
 {
-    if (!DLL_Verify(doublyLinkedList))
+    if (!DLL_Verify(doublyLinkedList, 0))
         return false;
 
     return true;
@@ -175,7 +175,7 @@ void NodeArrayInit(DLL_NodeArray* nodeArray)
 void DLL_AddNode(DoublyLinkedList* doublyLinkedList, 
                  const size_t nextNum, const size_t prevNum, const nodeValue_t value)
 {
-    DLL_DUMP(doublyLinkedList);
+    // DLL_DUMP(doublyLinkedList);
     const size_t free = doublyLinkedList->nodeArray.free;
     doublyLinkedList->nodeArray.free = doublyLinkedList->nodeArray.buffer[free].nextNodeNum;
 
@@ -184,7 +184,7 @@ void DLL_AddNode(DoublyLinkedList* doublyLinkedList,
                 .nextNodeNum = nextNum,
                 .prevNodeNum = prevNum};
 
-    DLL_DUMP(doublyLinkedList);
+    // DLL_DUMP(doublyLinkedList);
 }
 
 
@@ -194,11 +194,25 @@ void DLL_AddNode(DoublyLinkedList* doublyLinkedList,
     #define QUIET(...) 
 #endif // _DLL_QUIET_VERIFY
 
-bool DLL_Verify(DoublyLinkedList* doublyLinkedList)
+bool DLL_Verify(const DoublyLinkedList* doublyLinkedList, const size_t nodeNum)
 {
     #ifdef _DLL_SUPER_DUMP
     DLL_DUMP(doublyLinkedList);
     #endif // _DLL_SUPER_DUMP
+
+    #ifdef _DLL_DEBUG
+    if (doublyLinkedList == NULL)
+    {
+        QUIET(ColoredPrintf(RED, "doublyLinkedList == NULL\n"));
+        return false;
+    }
+    #endif // _DLL_DEBUG
+
+    if (nodeNum > doublyLinkedList->nodeArray.nodeCount)
+    {
+        QUIET(ColoredPrintf(RED, "nodeNum = %zu > nodeCount\n", nodeNum));
+        return false;
+    }
 
     if (doublyLinkedList->nodeArray.nodeCount > doublyLinkedList->nodeArray.capacity)
     {
