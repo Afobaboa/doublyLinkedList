@@ -36,7 +36,7 @@ bool DLL_Init(DoublyLinkedList* doublyLinkedList
 
     DLL_NodeArray* nodeArray = &doublyLinkedList->nodeArray;
     nodeArray->capacity = DLL_CAPACITY;
-    nodeArray->firstFreenodeLogicIndex     = 1;
+    nodeArray->firstFreeNodeLogicIndex     = 1;
     nodeArray->buffer   = (DLL_Node*) calloc(DLL_CAPACITY + 1, sizeof(DLL_Node));
     if (nodeArray->buffer == NULL)
         return false;
@@ -106,10 +106,10 @@ bool DLL_Insert(DoublyLinkedList* doublyLinkedList, nodeValue_t value, const siz
 
     const size_t prevnodeLogicIndex      = nodeLogicIndex;
     const size_t nextnodeLogicIndex      = currentNode->nextnodeLogicIndex;
-    const size_t firstFreenodeLogicIndex = doublyLinkedList->nodeArray.firstFreenodeLogicIndex;
+    const size_t firstFreeNodeLogicIndex = doublyLinkedList->nodeArray.firstFreeNodeLogicIndex;
 
-    currentNode->nextnodeLogicIndex              = firstFreenodeLogicIndex;
-    nodeBuffer[nextnodeLogicIndex].prevnodeLogicIndex = firstFreenodeLogicIndex;
+    currentNode->nextnodeLogicIndex              = firstFreeNodeLogicIndex;
+    nodeBuffer[nextnodeLogicIndex].prevnodeLogicIndex = firstFreeNodeLogicIndex;
 
     DLL_AddNode(doublyLinkedList, nextnodeLogicIndex, prevnodeLogicIndex, value);
 
@@ -147,12 +147,12 @@ bool DLL_Erase(DoublyLinkedList* doublyLinkedList, const size_t nodeLogicIndex)
     prevNode->nextnodeLogicIndex = currentNode->nextnodeLogicIndex;
     nextNode->prevnodeLogicIndex = currentNode->prevnodeLogicIndex;
     
-    size_t*   firstFreenodeLogicIndexPtr = &doublyLinkedList->nodeArray.firstFreenodeLogicIndex;
-    DLL_Node* firstFreeNode         = &nodeBuffer[*firstFreenodeLogicIndexPtr];
+    size_t*   firstFreeNodeLogicIndexPtr = &doublyLinkedList->nodeArray.firstFreeNodeLogicIndex;
+    DLL_Node* firstFreeNode         = &nodeBuffer[*firstFreeNodeLogicIndexPtr];
 
     firstFreeNode->prevnodeLogicIndex = nodeLogicIndex;
-    currentNode->nextnodeLogicIndex   = *firstFreenodeLogicIndexPtr;
-    *firstFreenodeLogicIndexPtr = nodeLogicIndex;
+    currentNode->nextnodeLogicIndex   = *firstFreeNodeLogicIndexPtr;
+    *firstFreeNodeLogicIndexPtr = nodeLogicIndex;
 
     doublyLinkedList->nodeArray.nodeCount--;
     return true;
@@ -201,10 +201,10 @@ void DLL_AddNode(DoublyLinkedList* doublyLinkedList,
                  const size_t nextnodeLogicIndex, const size_t prevnodeLogicIndex, const nodeValue_t value)
 {
     // DLL_DUMP(doublyLinkedList);
-    const size_t firstFreenodeLogicIndex = doublyLinkedList->nodeArray.firstFreenodeLogicIndex;
-    doublyLinkedList->nodeArray.firstFreenodeLogicIndex = doublyLinkedList->nodeArray.buffer[firstFreenodeLogicIndex].nextnodeLogicIndex;
+    const size_t firstFreeNodeLogicIndex = doublyLinkedList->nodeArray.firstFreeNodeLogicIndex;
+    doublyLinkedList->nodeArray.firstFreeNodeLogicIndex = doublyLinkedList->nodeArray.buffer[firstFreeNodeLogicIndex].nextnodeLogicIndex;
 
-    DLL_Node* newNode = &doublyLinkedList->nodeArray.buffer[firstFreenodeLogicIndex];
+    DLL_Node* newNode = &doublyLinkedList->nodeArray.buffer[firstFreeNodeLogicIndex];
     *newNode = {.value       = value,
                 .nextnodeLogicIndex = nextnodeLogicIndex,
                 .prevnodeLogicIndex = prevnodeLogicIndex};
@@ -246,9 +246,9 @@ bool DLL_Verify(const DoublyLinkedList* doublyLinkedList, const size_t nodeLogic
     }
 
     #ifdef _DLL_DEBUG
-    if (doublyLinkedList->nodeArray.firstFreenodeLogicIndex > doublyLinkedList->nodeArray.capacity)
+    if (doublyLinkedList->nodeArray.firstFreeNodeLogicIndex > doublyLinkedList->nodeArray.capacity)
     {
-        QUIET(ColoredPrintf(RED, "firstFreenodeLogicIndex > capacity\n"));
+        QUIET(ColoredPrintf(RED, "firstFreeNodeLogicIndex > capacity\n"));
         return false;
     }
 

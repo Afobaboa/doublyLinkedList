@@ -43,13 +43,15 @@ struct DLL_Node
     size_t prevnodeLogicIndex;
 };
 
+typedef size_t logic_ind_t;
+typedef size_t phys_ind_t;
 
 struct DLL_NodeArray 
 {
     DLL_Node* buffer;
     size_t nodeCount;
     size_t capacity;
-    size_t firstFreenodeLogicIndex;
+    size_t firstFreeNodeLogicIndex;
 };
 
 
