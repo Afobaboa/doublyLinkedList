@@ -7,17 +7,17 @@
 //--------------------------------------------------------------------------------------------------
 
 
-void NodeArrayInit(DLL_NodeArray* nodeArray);
+static void NodeArrayInit(DLL_NodeArray* nodeArray);
 
 
-bool DLL_Verify(const DoublyLinkedList* doublyLinkedList, const size_t nodeLogicIndex);
+static bool DLL_Verify(const DoublyLinkedList* doublyLinkedList, const size_t nodeLogicIndex);
 
 
-void DLL_AddNode(DoublyLinkedList* doublyLinkedList, 
+static void DLL_AddNode(DoublyLinkedList* doublyLinkedList, 
                  const size_t nextnodeLogicIndex, const size_t prevnodeLogicIndex, const nodeValue_t value);
 
-                
-size_t DLL_GetNodeRealIndex(DoublyLinkedList* doublyLinkedList, const size_t nodeLogicIndex);
+
+static size_t DLL_GetNodeRealIndex(DoublyLinkedList* doublyLinkedList, const size_t nodeLogicIndex);
 
 
 //--------------------------------------------------------------------------------------------------
@@ -174,7 +174,7 @@ bool DLL_PopFront(DoublyLinkedList* doublyLinkedList)
 //--------------------------------------------------------------------------------------------------
 
 
-void NodeArrayInit(DLL_NodeArray* nodeArray)
+static void NodeArrayInit(DLL_NodeArray* nodeArray)
 {
     DLL_Node* node = NULL;
     node = &nodeArray->buffer[0];
@@ -197,7 +197,7 @@ void NodeArrayInit(DLL_NodeArray* nodeArray)
 }
 
 
-void DLL_AddNode(DoublyLinkedList* doublyLinkedList, 
+static void DLL_AddNode(DoublyLinkedList* doublyLinkedList, 
                  const size_t nextnodeLogicIndex, const size_t prevnodeLogicIndex, const nodeValue_t value)
 {
     // DLL_DUMP(doublyLinkedList);
@@ -219,7 +219,7 @@ void DLL_AddNode(DoublyLinkedList* doublyLinkedList,
     #define QUIET(...) 
 #endif // _DLL_QUIET_VERIFY
 
-bool DLL_Verify(const DoublyLinkedList* doublyLinkedList, const size_t nodeLogicIndex)
+static bool DLL_Verify(const DoublyLinkedList* doublyLinkedList, const size_t nodeLogicIndex)
 {
     #ifdef _DLL_SUPER_DUMP
     DLL_DUMP(doublyLinkedList);
@@ -264,7 +264,7 @@ bool DLL_Verify(const DoublyLinkedList* doublyLinkedList, const size_t nodeLogic
 #undef QUIET
 
 
-size_t DLL_GetNodeRealIndex(DoublyLinkedList* doublyLinkedList, const size_t nodeLogicIndex)
+static size_t DLL_GetNodeRealIndex(DoublyLinkedList* doublyLinkedList, const size_t nodeLogicIndex)
 {
     size_t    nodeRealIndex = 0;
     DLL_Node* node    = &doublyLinkedList->nodeArray.buffer[0];

@@ -5,9 +5,9 @@
 #include "DLL_dump.h"
 
 
-void DLL_InsertTest(DoublyLinkedList* doublyLinkedList);
-void DLL_EraseTest(DoublyLinkedList* doublyLinkedList);
-void DLL_SearchTest(DoublyLinkedList* doublyLinkedList);
+static void DLL_InsertTest(DoublyLinkedList* doublyLinkedList);
+static void DLL_EraseTest(DoublyLinkedList* doublyLinkedList);
+static void DLL_SearchTest(DoublyLinkedList* doublyLinkedList);
 
 
 int main() 
@@ -34,7 +34,7 @@ int main()
 }
 
 
-void DLL_InsertTest(DoublyLinkedList* doublyLinkedList)
+static void DLL_InsertTest(DoublyLinkedList* doublyLinkedList)
 {
     DLL_Insert(doublyLinkedList, 52,     0);    // 52
     DLL_Insert(doublyLinkedList, 228,    0);    // 228, 52
@@ -47,7 +47,7 @@ void DLL_InsertTest(DoublyLinkedList* doublyLinkedList)
 }
 
 
-void DLL_EraseTest(DoublyLinkedList* doublyLinkedList)
+static void DLL_EraseTest(DoublyLinkedList* doublyLinkedList)
 {
     DLL_InsertTest(doublyLinkedList);
 
@@ -59,7 +59,7 @@ void DLL_EraseTest(DoublyLinkedList* doublyLinkedList)
 }
 
 
-void DLL_SearchTest(DoublyLinkedList* doublyLinkedList)
+static void DLL_SearchTest(DoublyLinkedList* doublyLinkedList)
 {
     DLL_Insert(doublyLinkedList, 52,  0);
     DLL_Insert(doublyLinkedList, 111, 0);

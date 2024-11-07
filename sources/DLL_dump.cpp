@@ -22,19 +22,19 @@ static DLL_Dumper dumper = {};
 //--------------------------------------------------------------------------------------------------
 
 
-void PrintDigraphEnvironment();
+static void PrintDigraphEnvironment();
 
-void PrintHeader();
-void PrintNodes(DoublyLinkedList* doublyLinkedList, Place* dumpPlace);
-void PrintEnding();
+static void PrintHeader();
+static void PrintNodes(DoublyLinkedList* doublyLinkedList, Place* dumpPlace);
+static void PrintEnding();
 
-void DeclareAllNodes(DoublyLinkedList* doublyLinkedList, Place* dumpPlace);
-void DeclareNode(DLL_Node* node, const size_t nodeRealIndex, const char* color);
-void DeclareListHeader(DoublyLinkedList* doublyLinkedList, Place* dumpPlace);
+static void DeclareAllNodes(DoublyLinkedList* doublyLinkedList, Place* dumpPlace);
+static void DeclareNode(DLL_Node* node, const size_t nodeRealIndex, const char* color);
+static void DeclareListHeader(DoublyLinkedList* doublyLinkedList, Place* dumpPlace);
 
-void ConnectNodes(DoublyLinkedList* doublyLinkedList);
+static void ConnectNodes(DoublyLinkedList* doublyLinkedList);
 
-void MakeGraph();
+static void MakeGraph();
 
 
 //--------------------------------------------------------------------------------------------------
@@ -91,7 +91,7 @@ void DLL_Dump(DoublyLinkedList* doublyLinkedList, Place place)
 //--------------------------------------------------------------------------------------------------
 
 
-void PrintDigraphEnvironment()
+static void PrintDigraphEnvironment()
 {
     fprintf(dumper.dotDumpFile, "digraph dumpGraph\n"
                                 "{\n"
@@ -99,7 +99,7 @@ void PrintDigraphEnvironment()
 }
 
 
-void PrintHeader()
+static void PrintHeader()
 {
     fseek(dumper.dotDumpFile, -2, SEEK_END);
         
@@ -110,21 +110,21 @@ void PrintHeader()
 }
 
 
-void PrintNodes(DoublyLinkedList* doublyLinkedList, Place* dumpPlace)
+static void PrintNodes(DoublyLinkedList* doublyLinkedList, Place* dumpPlace)
 {
     DeclareAllNodes(doublyLinkedList, dumpPlace);
     ConnectNodes(doublyLinkedList);
 }
 
 
-void PrintEnding()
+static void PrintEnding()
 {
     fprintf(dumper.dotDumpFile, "}\n"
                                 "}");
 }
 
 
-void DeclareAllNodes(DoublyLinkedList* doublyLinkedList, Place* dumpPlace)
+static void DeclareAllNodes(DoublyLinkedList* doublyLinkedList, Place* dumpPlace)
 {
     DLL_NodeArray* nodeArray = &doublyLinkedList->nodeArray;
 
@@ -154,7 +154,7 @@ void DeclareAllNodes(DoublyLinkedList* doublyLinkedList, Place* dumpPlace)
 }
 
 
-void ConnectNodes(DoublyLinkedList* doublyLinkedList)
+static void ConnectNodes(DoublyLinkedList* doublyLinkedList)
 {
     DLL_NodeArray* nodeArray = &doublyLinkedList->nodeArray;
     fprintf(dumper.dotDumpFile, "\tDLL%zu -> node%zu_%zu;\n\n", 
@@ -171,7 +171,7 @@ void ConnectNodes(DoublyLinkedList* doublyLinkedList)
 }
 
 
-void MakeGraph()
+static void MakeGraph()
 {
     const size_t MAX_COMMAND_LENGTH = 100;
     char commandForDot[MAX_COMMAND_LENGTH] = {};
@@ -180,7 +180,7 @@ void MakeGraph()
 }
 
 
-void DeclareNode(DLL_Node* node, const size_t nodeRealIndex, const char* color)
+static void DeclareNode(DLL_Node* node, const size_t nodeRealIndex, const char* color)
 {
     fprintf(dumper.dotDumpFile, "\tnode%zu_%zu [color=%s, shape=record, label=\""
                                     "{ num     | %zu            } | "
@@ -195,7 +195,7 @@ void DeclareNode(DLL_Node* node, const size_t nodeRealIndex, const char* color)
 }
 
 
-void DeclareListHeader(DoublyLinkedList* doublyLinkedList, Place* dumpPlace)
+static void DeclareListHeader(DoublyLinkedList* doublyLinkedList, Place* dumpPlace)
 {
     DLL_NodeArray* nodeArray = &doublyLinkedList->nodeArray;
     fprintf(dumper.dotDumpFile, "\tDLL%zu [shape = record, label = \""
